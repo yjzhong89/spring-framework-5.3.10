@@ -502,6 +502,7 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 		}
 
 		// Prepare method overrides.
+		// 处理@Lookup
 		try {
 			mbdToUse.prepareMethodOverrides();
 		}
@@ -513,7 +514,9 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 		try {
 			// Give BeanPostProcessors a chance to return a proxy instead of the target bean instance.
 			// 实例化前
+			// 第一次调用Spring的后置处理器
 			Object bean = resolveBeforeInstantiation(beanName, mbdToUse);
+			// 如果不为空，就直接返回
 			if (bean != null) {
 				return bean;
 			}
@@ -580,6 +583,7 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 		synchronized (mbd.postProcessingLock) {
 			if (!mbd.postProcessed) {
 				try {
+					// 第二次调用Spring的后置处理器
 					applyMergedBeanDefinitionPostProcessors(mbd, beanType, beanName);
 				}
 				catch (Throwable ex) {
@@ -1132,7 +1136,9 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 		if (!Boolean.FALSE.equals(mbd.beforeInstantiationResolved)) {
 			// Make sure bean class is actually resolved at this point.
 			// synthetic表示合成，如果某些Bean式合成的，那么则不会经过BeanPostProcessor的处理
+			// 并判断是否实现了InstantiationAwareBeanPostProcessor接口
 			if (!mbd.isSynthetic() && hasInstantiationAwareBeanPostProcessors()) {
+				// 获取bean所对应的class
 				Class<?> targetType = determineTargetType(beanName, mbd);
 				if (targetType != null) {
 					bean = applyBeanPostProcessorsBeforeInstantiation(targetType, beanName);
@@ -1160,7 +1166,9 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 	@Nullable
 	protected Object applyBeanPostProcessorsBeforeInstantiation(Class<?> beanClass, String beanName) {
 		for (InstantiationAwareBeanPostProcessor bp : getBeanPostProcessorCache().instantiationAware) {
+			// 在SpringFramework中，这个接口方法的实现主要有两个
 			Object result = bp.postProcessBeforeInstantiation(beanClass, beanName);
+			// 当遍历到第一个不为null的时候，就返回
 			if (result != null) {
 				return result;
 			}
@@ -1418,6 +1426,7 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 		// state of the bean before properties are set. This can be used, for example,
 		// to support styles of field injection.
 		// 实例化之后，属性设置之前
+		// 第三次调用Spring后置处理器
 		if (!mbd.isSynthetic() && hasInstantiationAwareBeanPostProcessors()) {
 			for (InstantiationAwareBeanPostProcessor bp : getBeanPostProcessorCache().instantiationAware) {
 				if (!bp.postProcessAfterInstantiation(bw.getWrappedInstance(), beanName)) {
@@ -1428,6 +1437,9 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 
 		PropertyValues pvs = (mbd.hasPropertyValues() ? mbd.getPropertyValues() : null);
 
+		// Spring自带的依赖注入
+		// @Bean(autowire = Autowire.BY_NAME)或者@Bean(autowire = Autowire.BY_TYPE)
+		// 两者的区别
 		int resolvedAutowireMode = mbd.getResolvedAutowireMode();
 		if (resolvedAutowireMode == AUTOWIRE_BY_NAME || resolvedAutowireMode == AUTOWIRE_BY_TYPE) {
 			// MutablePropertyValues是PropertyValues具体的实现类
@@ -1449,16 +1461,24 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 		PropertyDescriptor[] filteredPds = null;
 		if (hasInstAwareBpps) {
 			if (pvs == null) {
+				// 获取在MergedBeanDefinitionPostProcessor.postProcessMergedBeanDefinition方法中设置的属性值
+				// 例如beanDefinition.getPropertyValues().addPropertyValue("user", new User())
+				// 如果已经有值，那么@Autowired就不起作用
 				pvs = mbd.getPropertyValues();
 			}
 			for (InstantiationAwareBeanPostProcessor bp : getBeanPostProcessorCache().instantiationAware) {
 				// 这里会调用AutowiredAnnotationBeanPostProcessor的postProcessProperties()方法，会直接给对象中的属性赋值
 				// AutowiredAnnotationBeanPostProcessor内部并不会处理pvs，直接返回了
+				// AutowiredAnnotationBeanPostProcessor会解析@Autowired
+				// CommonAnnotationBeanPostProcessor会解析@Resource
+				// 第四次调用Spring后置处理器
 				PropertyValues pvsToUse = bp.postProcessProperties(pvs, bw.getWrappedInstance(), beanName);
 				if (pvsToUse == null) {
 					if (filteredPds == null) {
 						filteredPds = filterPropertyDescriptorsForDependencyCheck(bw, mbd.allowCaching);
 					}
+					// 第五次调用Spring后置处理器
+					// 已过期，可以忽略
 					pvsToUse = bp.postProcessPropertyValues(pvs, filteredPds, bw.getWrappedInstance(), beanName);
 					if (pvsToUse == null) {
 						return;

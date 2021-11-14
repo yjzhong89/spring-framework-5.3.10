@@ -203,6 +203,7 @@ public abstract class ClassUtils {
 			if (cl == null) {
 				// getClassLoader() returning null indicates the bootstrap ClassLoader
 				// 加入ClassUtils是被Bootstrap类加载器加载的，则获取系统类加载器
+				// spring-core的jar包在jre/lib目录中
 				try {
 					cl = ClassLoader.getSystemClassLoader();
 				}

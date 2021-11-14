@@ -213,6 +213,14 @@ public abstract class AbstractBeanFactory extends FactoryBeanRegistrySupport imp
 		return doGetBean(name, requiredType, null, false);
 	}
 
+	/**
+	 * 第二个参数表示构造函数的参数，对于单例bean不生效，只对于原型bean有效
+	 * @param name the name of the bean to retrieve
+	 * @param args arguments to use when creating a bean instance using explicit arguments
+	 * (only applied when creating a new instance as opposed to retrieving an existing one)
+	 * @return
+	 * @throws BeansException
+	 */
 	@Override
 	public Object getBean(String name, Object... args) throws BeansException {
 		return doGetBean(name, null, args, false);
@@ -255,6 +263,7 @@ public abstract class AbstractBeanFactory extends FactoryBeanRegistrySupport imp
 		Object beanInstance;
 
 		// Eagerly check singleton cache for manually registered singletons.
+		// 先去单例池获取
 		Object sharedInstance = getSingleton(beanName);
 		if (sharedInstance != null && args == null) {
 			if (logger.isTraceEnabled()) {
@@ -279,6 +288,7 @@ public abstract class AbstractBeanFactory extends FactoryBeanRegistrySupport imp
 
 			// Check if bean definition exists in this factory.
 			BeanFactory parentBeanFactory = getParentBeanFactory();
+			// 先获取父BeanFactory
 			if (parentBeanFactory != null && !containsBeanDefinition(beanName)) {
 				// Not found -> check parent.
 				// &&&&xxx---->&xxx
@@ -312,7 +322,7 @@ public abstract class AbstractBeanFactory extends FactoryBeanRegistrySupport imp
 				}
 				RootBeanDefinition mbd = getMergedLocalBeanDefinition(beanName);
 
-				// 检查BeanDefinition是不是Abstract的
+				// 检查BeanDefinition是不是Abstract的，如果是，直接抛异常
 				checkMergedBeanDefinition(mbd, beanName, args);
 
 				// Guarantee initialization of beans that the current bean depends on.
@@ -341,6 +351,7 @@ public abstract class AbstractBeanFactory extends FactoryBeanRegistrySupport imp
 
 				// Create bean instance.
 				if (mbd.isSingleton()) {
+					// 如果是单例bean
 					sharedInstance = getSingleton(beanName, () -> {
 						try {
 							return createBean(beanName, mbd, args);
@@ -368,6 +379,8 @@ public abstract class AbstractBeanFactory extends FactoryBeanRegistrySupport imp
 					beanInstance = getObjectForBeanInstance(prototypeInstance, name, beanName, mbd);
 				}
 				else {
+					// 其他作用域指SpringMVC中的Request、Session等
+					// @RequestScope
 					String scopeName = mbd.getScope();
 					if (!StringUtils.hasLength(scopeName)) {
 						throw new IllegalStateException("No scope name defined for bean ´" + beanName + "'");
@@ -376,7 +389,7 @@ public abstract class AbstractBeanFactory extends FactoryBeanRegistrySupport imp
 					if (scope == null) {
 						throw new IllegalStateException("No Scope registered for scope name '" + scopeName + "'");
 					}
-					try {  // session.getAttriute(beaName)  setAttri
+					try {  // session.getAttribute(beaName)  setAttribute
 						Object scopedInstance = scope.get(beanName, () -> {
 							beforePrototypeCreation(beanName);
 							try {
@@ -1001,6 +1014,8 @@ public abstract class AbstractBeanFactory extends FactoryBeanRegistrySupport imp
 	 * Return the internal cache of pre-filtered post-processors,
 	 * freshly (re-)building it if necessary.
 	 * @since 5.3
+	 *
+	 * 5.3版本新加的方法，通过缓存去获取对应的BeanPostProcessor
 	 */
 	BeanPostProcessorCache getBeanPostProcessorCache() {
 		BeanPostProcessorCache bpCache = this.beanPostProcessorCache;

@@ -369,6 +369,7 @@ public abstract class AbstractBeanDefinition extends BeanMetadataAttributeAccess
 		if (lazyInit != null) {
 			setLazyInit(lazyInit);
 		}
+		// 设置装配模型，默认为0，即AUTOWIRE_NO
 		setAutowireMode(defaults.getAutowireMode());
 		setDependencyCheck(defaults.getDependencyCheck());
 		setInitMethodName(defaults.getInitMethodName());

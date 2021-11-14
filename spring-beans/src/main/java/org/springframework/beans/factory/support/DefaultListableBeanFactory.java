@@ -938,11 +938,12 @@ public class DefaultListableBeanFactory extends AbstractAutowireCapableBeanFacto
 		// Trigger initialization of all non-lazy singleton beans...
 		for (String beanName : beanNames) {
 			// 获取合并后的BeanDefinition
+			// 合并bean，即父子bean，子bean的一些属性是继承父bean的，所以在创建子bean时，需要将父bean的属性合并
 			RootBeanDefinition bd = getMergedLocalBeanDefinition(beanName);
-
+			// 判断BeanDefinition是否抽象，即abstract属性是否为true，在父子bean中会使用，父bean可以设置为抽象的
 			if (!bd.isAbstract() && bd.isSingleton() && !bd.isLazyInit()) {
 				if (isFactoryBean(beanName)) {
-					// 获取FactoryBean对象
+					// 获取FactoryBean对象，需要在name前加&
 					Object bean = getBean(FACTORY_BEAN_PREFIX + beanName);
 					if (bean instanceof FactoryBean) {
 						FactoryBean<?> factory = (FactoryBean<?>) bean;
@@ -956,6 +957,7 @@ public class DefaultListableBeanFactory extends AbstractAutowireCapableBeanFacto
 							isEagerInit = (factory instanceof SmartFactoryBean &&
 									((SmartFactoryBean<?>) factory).isEagerInit());
 						}
+						// 只有实现了SmartFactoryBean并且isEagerInit返回为true
 						if (isEagerInit) {
 							// 创建真正的Bean对象(getObject()返回的对象)
 							getBean(beanName);
@@ -970,6 +972,7 @@ public class DefaultListableBeanFactory extends AbstractAutowireCapableBeanFacto
 		}
 
 		// 所有的非懒加载单例Bean都创建完了后
+		// 如果实现了SmartInitializingSingleton，那么就会调用afterSingletonsInstantiated方法
 		// Trigger post-initialization callback for all applicable beans...
 		for (String beanName : beanNames) {
 			Object singletonInstance = getSingleton(beanName);

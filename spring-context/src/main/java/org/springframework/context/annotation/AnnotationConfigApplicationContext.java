@@ -65,6 +65,7 @@ public class AnnotationConfigApplicationContext extends GenericApplicationContex
 	 * through {@link #register} calls and then manually {@linkplain #refresh refreshed}.
 	 */
 	public AnnotationConfigApplicationContext() {
+		// StartupStep是spring在5.3引入的新特性，利用JFR特性，记录一些参数
 		StartupStep createAnnotatedBeanDefReader = this.getApplicationStartup().start("spring.context.annotated-bean-reader.create");
 		// 额外会创建StandardEnvironment
 		this.reader = new AnnotatedBeanDefinitionReader(this);

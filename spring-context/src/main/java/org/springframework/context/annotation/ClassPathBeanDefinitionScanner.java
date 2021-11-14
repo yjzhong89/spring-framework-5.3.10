@@ -268,13 +268,14 @@ public class ClassPathBeanDefinitionScanner extends ClassPathScanningCandidateCo
 		Assert.notEmpty(basePackages, "At least one base package must be specified");
 		Set<BeanDefinitionHolder> beanDefinitions = new LinkedHashSet<>();
 		for (String basePackage : basePackages) {
-
+			// 进行Bean的扫描
 			Set<BeanDefinition> candidates = findCandidateComponents(basePackage);
 
 			for (BeanDefinition candidate : candidates) {
+				// 解析@Scope属性
 				ScopeMetadata scopeMetadata = this.scopeMetadataResolver.resolveScopeMetadata(candidate);
 				candidate.setScope(scopeMetadata.getScopeName());
-
+				// 生成beanName
 				String beanName = this.beanNameGenerator.generateBeanName(candidate, this.registry);
 
 				if (candidate instanceof AbstractBeanDefinition) {
@@ -340,6 +341,7 @@ public class ClassPathBeanDefinitionScanner extends ClassPathScanningCandidateCo
 	 * bean definition has been found for the specified name
 	 */
 	protected boolean checkCandidate(String beanName, BeanDefinition beanDefinition) throws IllegalStateException {
+		// 先通过beanName判断Spring容器中是否存在该bean，如果不存在，返回true
 		if (!this.registry.containsBeanDefinition(beanName)) {
 			return true;
 		}
@@ -348,7 +350,8 @@ public class ClassPathBeanDefinitionScanner extends ClassPathScanningCandidateCo
 		if (originatingDef != null) {
 			existingDef = originatingDef;
 		}
-		// 是否兼容，如果兼容返回false表示不会重新注册到Spring容器中，如果不冲突则会抛异常。
+		// 是否兼容，如果兼容返回false表示不会重新注册到Spring容器中，如果不兼容则会抛异常。
+		// 这是由于一个类可能会被多次注册
 		if (isCompatible(beanDefinition, existingDef)) {
 			return false;
 		}
