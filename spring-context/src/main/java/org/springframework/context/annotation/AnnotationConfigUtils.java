@@ -148,11 +148,13 @@ public abstract class AnnotationConfigUtils {
 	public static Set<BeanDefinitionHolder> registerAnnotationConfigProcessors(
 			BeanDefinitionRegistry registry, @Nullable Object source) {
 
+		// 获取BeanFactory
 		DefaultListableBeanFactory beanFactory = unwrapDefaultListableBeanFactory(registry);
 		if (beanFactory != null) {
 
 			// 设置beanFactory的OrderComparator为AnnotationAwareOrderComparator
 			// 它是一个Comparator，是一个比较器，可以用来进行排序，比如new ArrayList<>().sort(Comparator);
+			// 比如有@Order注解，就可以使用AnnotationAwareOrderComparator进行排序
 			if (!(beanFactory.getDependencyComparator() instanceof AnnotationAwareOrderComparator)) {
 				beanFactory.setDependencyComparator(AnnotationAwareOrderComparator.INSTANCE);
 			}
@@ -172,6 +174,7 @@ public abstract class AnnotationConfigUtils {
 		}
 
 		// 注册AutowiredAnnotationBeanPostProcessor类型的BeanDefinition
+		// 用于解析@Autowired注解
 		if (!registry.containsBeanDefinition(AUTOWIRED_ANNOTATION_PROCESSOR_BEAN_NAME)) {
 			RootBeanDefinition def = new RootBeanDefinition(AutowiredAnnotationBeanPostProcessor.class);
 			def.setSource(source);
@@ -179,6 +182,7 @@ public abstract class AnnotationConfigUtils {
 		}
 
 		// 注册CommonAnnotationBeanPostProcessor类型的BeanDefinition
+		// 用于解析@Resource注解
 		// Check for JSR-250 support, and if present add the CommonAnnotationBeanPostProcessor.
 		if (jsr250Present && !registry.containsBeanDefinition(COMMON_ANNOTATION_PROCESSOR_BEAN_NAME)) {
 			RootBeanDefinition def = new RootBeanDefinition(CommonAnnotationBeanPostProcessor.class);
@@ -202,14 +206,16 @@ public abstract class AnnotationConfigUtils {
 			beanDefs.add(registerPostProcessor(registry, def, PERSISTENCE_ANNOTATION_PROCESSOR_BEAN_NAME));
 		}
 
-		// 注册EventListenerMethodProcessor类型的BeanDefinition，用来处理@EventListener注解的
+		// 注册EventListenerMethodProcessor类型的BeanDefinition
+		// 用来处理@EventListener注解
 		if (!registry.containsBeanDefinition(EVENT_LISTENER_PROCESSOR_BEAN_NAME)) {
 			RootBeanDefinition def = new RootBeanDefinition(EventListenerMethodProcessor.class);
 			def.setSource(source);
 			beanDefs.add(registerPostProcessor(registry, def, EVENT_LISTENER_PROCESSOR_BEAN_NAME));
 		}
 
-		// 注册DefaultEventListenerFactory类型的BeanDefinition，用来处理@EventListener注解的
+		// 注册DefaultEventListenerFactory类型的BeanDefinition
+		// 用来处理@EventListener注解
 		if (!registry.containsBeanDefinition(EVENT_LISTENER_FACTORY_BEAN_NAME)) {
 			RootBeanDefinition def = new RootBeanDefinition(DefaultEventListenerFactory.class);
 			def.setSource(source);
@@ -223,7 +229,8 @@ public abstract class AnnotationConfigUtils {
 			BeanDefinitionRegistry registry, RootBeanDefinition definition, String beanName) {
 
 		definition.setRole(BeanDefinition.ROLE_INFRASTRUCTURE);
-		registry.registerBeanDefinition(beanName, definition);  // BeanDefinitinoMap
+		// beanDefinitionMap以及beanDefinitionNames
+		registry.registerBeanDefinition(beanName, definition);
 		return new BeanDefinitionHolder(definition, beanName);
 	}
 

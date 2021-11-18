@@ -90,6 +90,7 @@ final class PostProcessorRegistrationDelegate {
 			List<BeanDefinitionRegistryPostProcessor> registryProcessors = new ArrayList<>();
 
 			// beanFactoryPostProcessors集合一般情况下都是空的，除非我们手动调用容器的addBeanFactoryPostProcessor方法添加了
+			// 例如：context.addBeanFactoryPostProcessor(new MyBeanFactoryPostProcessor());
 			// beanFactoryPostProcessors中可能包含了：普通BeanFactoryPostProcessor对象和BeanDefinitionRegistryPostProcessor对象
 			// 对于BeanDefinitionRegistryPostProcessor对象，会执行自己的postProcessBeanDefinitionRegistry()方法
 			for (BeanFactoryPostProcessor postProcessor : beanFactoryPostProcessors) {
@@ -111,7 +112,7 @@ final class PostProcessorRegistrationDelegate {
 			List<BeanDefinitionRegistryPostProcessor> currentRegistryProcessors = new ArrayList<>();
 
 			// 执行扫描出来的BeanDefinitionRegistryPostProcessor
-
+			// 正常只有一个，即ConfigurationClassPostProcessor
 			// First, invoke the BeanDefinitionRegistryPostProcessors that implement PriorityOrdered.
 			String[] postProcessorNames =
 					beanFactory.getBeanNamesForType(BeanDefinitionRegistryPostProcessor.class, true, false);
@@ -124,6 +125,7 @@ final class PostProcessorRegistrationDelegate {
 			// 升序排序
 			sortPostProcessors(currentRegistryProcessors, beanFactory);
 			registryProcessors.addAll(currentRegistryProcessors);
+			// 重点代码，在这里会调用ConfigurationClassPostProcessor的postProcessBeanDefinitionRegistry方法
 			invokeBeanDefinitionRegistryPostProcessors(currentRegistryProcessors, registry, beanFactory.getApplicationStartup());
 			currentRegistryProcessors.clear();
 
