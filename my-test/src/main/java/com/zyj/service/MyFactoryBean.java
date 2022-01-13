@@ -3,7 +3,7 @@ package com.zyj.service;
 import org.springframework.beans.factory.FactoryBean;
 import org.springframework.stereotype.Component;
 
-//@Component("myFactory")
+@Component
 public class MyFactoryBean implements FactoryBean {
 	@Override
 	public Object getObject() throws Exception {

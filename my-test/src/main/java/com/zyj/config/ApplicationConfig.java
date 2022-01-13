@@ -11,5 +11,8 @@ import org.springframework.core.type.AnnotationMetadata;
 //@Import({MyImportSelector.class})
 //@Import({UserService.class})
 public class ApplicationConfig {
-
+	@Bean({"userService", "111", "222", "333"})
+	public UserService userService() {
+		return new UserService();
+	}
 }

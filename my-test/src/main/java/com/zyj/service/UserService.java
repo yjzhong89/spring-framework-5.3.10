@@ -10,7 +10,13 @@ import javax.inject.Named;
 //@ManagedBean("userService")
 //@Named
 public class UserService {
+	private DetailService detailService;
+
 	public void test() {
-		System.out.println("---test---");
+		System.out.println(detailService);
+	}
+
+	public void setDetailService(DetailService detailService) {
+		this.detailService = detailService;
 	}
 }

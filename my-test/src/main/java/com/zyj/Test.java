@@ -10,8 +10,9 @@ public class Test {
 		AnnotationConfigApplicationContext context = new AnnotationConfigApplicationContext(ApplicationConfig.class);
 //		context.register(UserService.class);
 //		context.addBeanFactoryPostProcessor(new MyBeanFactoryPostProcessor());
-		UserService userService = context.getBean(UserService.class);
+		UserService userService = (UserService) context.getBean("111");
 		userService.test();
+//		System.out.println(context.getBean("ABTest"));
 
 		// FactoryBean
 //		AnnotationConfigApplicationContext context = new AnnotationConfigApplicationContext(ApplicationConfig.class);
