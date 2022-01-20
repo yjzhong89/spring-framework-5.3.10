@@ -1307,6 +1307,13 @@ public class DefaultListableBeanFactory extends AbstractAutowireCapableBeanFacto
 		return new NamedBeanHolder<T>(beanName, adaptBeanInstance(beanName, bean, requiredType.toClass()));
 	}
 
+	/**
+	 * 根据descriptor来判断类型
+	 * 1. 如果是Optional
+	 * 2. 如果是ObjectFactory类型，直接返回ObjectFactory对象，在调用getObject方法时调用doResolveDependency方法；
+	 * 3. 判断是否添加了@Lazy注解，如果有就会生成代理对象并返回，在调用代理对象的方法时调用doResolveDependency方法；
+	 *    如果没有，则调用doResolveDependency方法
+	 */
 	@Override
 	@Nullable
 	public Object resolveDependency(DependencyDescriptor descriptor, @Nullable String requestingBeanName,
@@ -1340,6 +1347,17 @@ public class DefaultListableBeanFactory extends AbstractAutowireCapableBeanFacto
 		}
 	}
 
+	/**
+	 * 1. 先从缓存中获取，如果有则直接返回；
+	 * 2. 如果存在@Value注解，获取@Value注解，进行解析并返回
+	 *    ($是去找外部配置、系统的参数，将值赋过来；#是SpEL表达式，去寻找对应bean中变量的内容；如果是字符串，就将字符串的值注入进去)
+	 * 3. 如果是数组、Map这些类型，找到descriptor对应的类型所匹配的所有bean获取并添加到集合中
+	 * 4. 调用findAutowireCandidates方法去获取bean
+	 *    如果一个没找到，但是required是true，直接抛异常，否则返回null
+	 *    如果找到多个，调用determineAutowireCandidate方法判断是哪一个
+	 *    如果只找到一个，就是候选的bean
+	 * 5. 如果bean的类型是Class，那么就进行实例化
+	 */
 	@Nullable
 	public Object doResolveDependency(DependencyDescriptor descriptor, @Nullable String beanName,
 			@Nullable Set<String> autowiredBeanNames, @Nullable TypeConverter typeConverter) throws BeansException {
